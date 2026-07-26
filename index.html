@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastercotutorials - Code. Create. Innovate.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        @font-face { font-family: 'AvathorType'; src: url('fonts/AvathorType-Black.otf') format('opentype'); font-weight: 900; font-display: swap; }
+        @font-face { font-family: 'StylishOutside'; src: url('fonts/Stylish Outside.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --accent: #E63946;
+            --accent-dark: #C41E1E;
+            --accent-glow: rgba(230, 57, 70, 0.6);
+            --bg-deep: #0a0a0a;
+            --bg-card: rgba(255,255,255,0.02);
+            --text-primary: #f5f5f5;
+            --text-muted: #999;
+            --glass: rgba(255,255,255,0.03);
+            --glass-border: rgba(255,255,255,0.06);
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .font-avathor { font-family: 'AvathorType', 'Outfit', sans-serif; }
+        .font-stylish { font-family: 'StylishOutside', 'Outfit', sans-serif; }
+        .text-accent { color: var(--accent); }
+
+        #three-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        .content-wrapper { position: relative; z-index: 2; }
+
+        /* NAVIGATION */
+        .nav-glass {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 1.2rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(10,10,10,0.7);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.4s ease;
+        }
+        .nav-glass.scrolled { background: rgba(10,10,10,0.95); }
+        .nav-logo { display: flex; align-items: center; gap: 1rem; }
+        .nav-logo img { width: 40px; height: 40px; object-fit: contain; filter: brightness(0) invert(1); }
+        .nav-logo-text { display: flex; flex-direction: column; }
+        .nav-logo-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; }
+        .nav-logo-sub { font-size: 0.5rem; color: var(--text-muted); letter-spacing: 0.25em; text-transform: uppercase; }
+        .nav-links { display: flex; align-items: center; gap: 2rem; }
+        .nav-links a { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--text-primary); }
+        .nav-cta {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--text-primary); text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.4rem; border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .nav-cta:hover { background: var(--accent); border-color: var(--accent); }
+
+        /* HERO */
+        .hero-section {
+            min-height: 100vh;
+            display: flex; align-items: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+        }
+        .hero-inner { max-width: 1400px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem; border-radius: 100px;
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;
+            color: var(--accent); margin-bottom: 2rem;
+        }
+        .hero-title {
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            font-weight: 900; line-height: 0.9; letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+        }
+        .hero-title .line { display: block; overflow: hidden; }
+        .hero-title .line-inner { display: block; transform: translateY(110%); }
+        .hero-desc { font-size: 1.1rem; color: var(--text-muted); max-width: 420px; line-height: 1.7; margin-bottom: 2.5rem; }
+        .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--accent); color: white;
+            font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 1rem 2rem; border-radius: 8px; text-decoration: none;
+            transition: all 0.3s; border: none; cursor: pointer;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px var(--accent-glow); }
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: transparent; color: var(--text-primary);
+            font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 1rem 2rem; border-radius: 8px; text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s;
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .hero-stats { display: flex; gap: 2.5rem; border-top: 1px solid var(--glass-border); padding-top: 2rem; }
+        .hero-stat-num { font-size: 2.5rem; font-weight: 900; color: var(--accent); line-height: 1; }
+        .hero-stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-top: 0.3rem; }
+
+        .hero-visual { position: relative; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
+        .hero-video-wrap {
+            position: relative; width: 100%; max-width: 500px; aspect-ratio: 1;
+            border-radius: 20px; overflow: hidden;
+            border: 1px solid var(--glass-border);
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+            box-shadow: 0 0 80px rgba(230,57,70,0.15), 0 40px 80px rgba(0,0,0,0.5);
+        }
+        .hero-video-wrap video { width: 100%; height: 100%; object-fit: cover; }
+        .hero-video-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.7), transparent 50%); pointer-events: none; }
+        .hero-video-badge {
+            position: absolute; bottom: 1.5rem; left: 1.5rem;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem; border-radius: 8px;
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .hero-video-badge .dot { width: 6px; height: 6px; background: #e33; border-radius: 50%; animation: pulse-dot 2s infinite; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* SECTION COMMON */
+        .section-pad { padding: 8rem 2rem; position: relative; }
+        .section-inner { max-width: 1400px; margin: 0 auto; }
+        .section-tag {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 0.4rem 1rem; border-radius: 100px;
+            font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;
+            color: var(--accent); margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 900; line-height: 0.95; letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+        .section-desc { font-size: 1.05rem; color: var(--text-muted); max-width: 600px; line-height: 1.7; }
+
+        /* FEATURES */
+        .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 4rem; }
+        .feature-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 2.5rem 2rem;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
+            transform-style: preserve-3d;
+            cursor: default;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            transform: scaleX(0); transition: transform 0.5s ease;
+        }
+        .feature-card:hover::before { transform: scaleX(1); }
+        .feature-card:hover {
+            border-color: rgba(230,57,70,0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3), 0 0 40px rgba(230,57,70,0.1);
+            transform: translateY(-8px);
+        }
+        .feature-icon {
+            width: 50px; height: 50px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.5rem;
+            transition: all 0.4s;
+        }
+        .feature-card:hover .feature-icon { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+        .feature-icon svg { width: 24px; height: 24px; stroke: var(--text-muted); transition: stroke 0.3s; }
+        .feature-card:hover .feature-icon svg { stroke: white; }
+        .feature-title { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.8rem; }
+        .feature-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+
+        /* SHOWCASE */
+        .showcase-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-top: 4rem; }
+        .showcase-main {
+            position: relative; border-radius: 16px; overflow: hidden;
+            border: 1px solid var(--glass-border);
+            background: #0a0a0a;
+            transition: all 0.5s;
+        }
+        .showcase-main:hover { border-color: rgba(230,57,70,0.3); box-shadow: 0 0 60px rgba(230,57,70,0.1); }
+        .showcase-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; cursor: pointer; }
+        .showcase-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: opacity 0.3s, transform 0.5s; }
+        .showcase-main:hover .showcase-thumb img { opacity: 0.5; transform: scale(1.05); }
+        .showcase-play {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70px; height: 70px; background: var(--accent); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px var(--accent-glow);
+            transition: transform 0.3s;
+        }
+        .showcase-main:hover .showcase-play { transform: translate(-50%, -50%) scale(1.1); }
+        .showcase-tag {
+            position: absolute; top: 1.5rem; left: 1.5rem;
+            background: var(--accent); color: white;
+            font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0.4rem 0.8rem; border-radius: 6px;
+        }
+        .showcase-info { padding: 2rem; }
+        .showcase-info h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; transition: color 0.3s; }
+        .showcase-main:hover .showcase-info h3 { color: var(--accent); }
+        .showcase-info p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
+        .showcase-meta { display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+        .showcase-side { display: flex; flex-direction: column; gap: 1.5rem; }
+        .showcase-card {
+            background: var(--bg-card); border: 1px solid var(--glass-border);
+            border-radius: 16px; overflow: hidden;
+            transition: all 0.4s;
+        }
+        .showcase-card:hover { border-color: rgba(230,57,70,0.3); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .showcase-card-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; cursor: pointer; }
+        .showcase-card-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: all 0.3s; }
+        .showcase-card:hover .showcase-card-thumb img { opacity: 0.5; }
+        .showcase-card-tag {
+            position: absolute; top: 0.8rem; left: 0.8rem;
+            font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 0.3rem 0.6rem; border-radius: 4px;
+        }
+        .tag-dark { background: rgba(0,0,0,0.7); color: white; backdrop-filter: blur(5px); }
+        .tag-accent { background: var(--accent); color: white; }
+        .showcase-card-info { padding: 1.2rem; }
+        .showcase-card-info h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; transition: color 0.3s; }
+        .showcase-card:hover .showcase-card-info h4 { color: var(--accent); }
+        .showcase-card-meta { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+        /* STORY SECTION */
+        .story-section {
+            padding: 8rem 2rem;
+            position: relative;
+            background: linear-gradient(180deg, var(--bg-deep) 0%, #0f0f0f 50%, var(--bg-deep) 100%);
+        }
+        .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 4rem; }
+        .story-content { max-width: 600px; }
+        .story-quote {
+            font-size: 1.3rem;
+            font-style: italic;
+            color: var(--text-primary);
+            border-left: 3px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            line-height: 1.6;
+        }
+        .story-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+        }
+        .story-brand-img {
+            width: 100%;
+            max-width: 400px;
+            filter: brightness(0) invert(1) drop-shadow(0 0 40px rgba(230,57,70,0.3));
+            opacity: 0.9;
+        }
+        .story-glow {
+            position: absolute;
+            width: 300px; height: 300px;
+            background: var(--accent);
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.2;
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+        }
+
+        /* COMMUNITY */
+        .community-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 4rem; max-width: 1000px; margin-left: auto; margin-right: auto; }
+        .community-card {
+            position: relative; padding: 3rem;
+            border-radius: 20px; overflow: hidden;
+            transition: all 0.5s; text-decoration: none; display: block;
+        }
+        .community-card-light {
+            background: var(--bg-card); border: 1px solid var(--glass-border);
+        }
+        .community-card-dark {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+        }
+        .community-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(0,0,0,0.3); border-color: rgba(230,57,70,0.3); }
+        .community-icon {
+            width: 60px; height: 60px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.5rem; transition: all 0.4s;
+        }
+        .community-card-light .community-icon { background: rgba(255,50,50,0.08); }
+        .community-card-dark .community-icon { background: rgba(255,255,255,0.05); }
+        .community-card:hover .community-icon { background: var(--accent); box-shadow: 0 0 25px var(--accent-glow); }
+        .community-card:hover .community-icon svg { fill: white !important; }
+        .community-card h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; transition: color 0.3s; }
+        .community-card:hover h3 { color: var(--accent); }
+        .community-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
+        .community-link { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s; }
+        .community-card:hover .community-link { color: var(--accent); }
+
+        /* TEAM */
+        .team-carousel-wrap {
+            position: relative; margin-top: 4rem;
+            background: var(--bg-card); border: 1px solid var(--glass-border);
+            border-radius: 24px; overflow: hidden;
+            min-height: 500px; display: flex;
+        }
+        .team-bg { position: absolute; inset: 0; transition: background-color 0.7s; opacity: 0.08; }
+        .team-image-side {
+            width: 50%; position: relative; display: flex; align-items: center; justify-content: center;
+            padding: 3rem; z-index: 2;
+        }
+        .team-image-frame { position: relative; width: 100%; max-width: 350px; aspect-ratio: 3/4; }
+        .team-image-shape { position: absolute; inset: 0; border-radius: 16px; transform: rotate(3deg); transition: background-color 0.7s; }
+        .team-image-frame img {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; border-radius: 16px; z-index: 2;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .team-text-side {
+            width: 50%; display: flex; flex-direction: column; justify-content: center;
+            padding: 3rem 4rem; z-index: 2;
+        }
+        .team-role { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .team-name { font-size: clamp(2.5rem, 4vw, 4rem); font-weight: 400; line-height: 1.1; margin-bottom: 1.5rem; }
+        .team-bio { font-size: 1rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 2rem; max-width: 400px; }
+        .team-dots { display: flex; gap: 0.6rem; }
+        .team-dot {
+            width: 10px; height: 10px; border-radius: 100px;
+            background: rgba(255,255,255,0.15); border: none; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .team-dot.active { width: 30px; background: var(--text-primary); }
+        .team-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10; transition: all 0.3s;
+        }
+        .team-nav-btn:hover { background: var(--accent); border-color: var(--accent); }
+        .team-nav-btn svg { width: 20px; height: 20px; stroke: var(--text-muted); transition: stroke 0.3s; }
+        .team-nav-btn:hover svg { stroke: white; }
+        .team-prev { left: -25px; }
+        .team-next { right: -25px; }
+
+        /* FOOTER */
+        .site-footer {
+            background: var(--bg-deep);
+            border-top: 1px solid var(--glass-border);
+            padding: 5rem 2rem 2rem;
+        }
+        .footer-inner { max-width: 1400px; margin: 0 auto; }
+        .footer-top { display: flex; gap: 4rem; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; }
+        .footer-brand { max-width: 350px; }
+        .footer-brand img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 1.5rem; filter: drop-shadow(0 0 20px rgba(230,57,70,0.3)); }
+        .footer-brand h3 { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.8rem; }
+        .footer-brand p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+        .footer-links-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; flex: 1; }
+        .footer-col h4 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 0.8rem; }
+        .footer-col a { font-size: 0.85rem; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+        .footer-col a:hover { color: var(--accent); }
+        .footer-bottom { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* REVEAL ANIMATIONS */
+        .reveal { opacity: 0; transform: translateY(40px); }
+        .reveal-left { opacity: 0; transform: translateX(-60px); }
+        .reveal-right { opacity: 0; transform: translateX(60px); }
+        .reveal-scale { opacity: 0; transform: scale(0.9); }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .showcase-grid { grid-template-columns: 1fr; }
+            .hero-inner { grid-template-columns: 1fr; }
+            .hero-visual { margin-top: 3rem; }
+            .story-grid { grid-template-columns: 1fr; }
+            .team-carousel-wrap { flex-direction: column; }
+            .team-image-side, .team-text-side { width: 100%; }
+            .team-nav-btn { display: none; }
+        }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .features-grid { grid-template-columns: 1fr; }
+            .community-grid { grid-template-columns: 1fr; }
+            .hero-stats { flex-direction: column; gap: 1.5rem; }
+            .footer-links-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* CUSTOM CURSOR */
+        .cursor-dot {
+            position: fixed; width: 8px; height: 8px;
+            background: var(--accent); border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            transition: transform 0.15s ease;
+            mix-blend-mode: difference;
+        }
+        .cursor-ring {
+            position: fixed; width: 35px; height: 35px;
+            border: 1px solid rgba(230,57,70,0.5); border-radius: 50%;
+            pointer-events: none; z-index: 9998;
+            transition: all 0.2s ease;
+        }
+        @media (max-width: 768px) { .cursor-dot, .cursor-ring { display: none; } }
+
+        /* LOADING SCREEN */
+        .loader {
+            position: fixed; inset: 0; z-index: 10000;
+            background: var(--bg-deep);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .loader.hidden { opacity: 0; visibility: hidden; }
+        .loader-text { font-size: 1.5rem; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; }
+        .loader-bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 1.5rem; border-radius: 2px; overflow: hidden; }
+        .loader-bar-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+
+        .glow-orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); pointer-events: none; opacity: 0.15;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader" id="loader">
+        <div class="loader-text font-avathor">MCO</div>
+        <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+    </div>
+
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <canvas id="three-canvas"></canvas>
+    <div class="noise-overlay"></div>
+
+    <div class="content-wrapper">
+        <nav class="nav-glass" id="mainNav">
+            <div class="nav-logo">
+                <img src="brand-logo.png" alt="MCO Logo">
+                <div class="nav-logo-text">
+                    <span class="nav-logo-title font-avathor">MASTERCOTUTORIALS</span>
+                    <span class="nav-logo-sub">Built with AI. Driven by Creativity.</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="https://mastercotutorials.my.canva.site" target="_blank">Learning Paths</a>
+                <a href="https://discord.gg/VqTEr7Nsqk" target="_blank">Community</a>
+                <a href="https://mastercotutorials.my.canva.site" target="_blank">Courses</a>
+                <a href="https://www.jotform.com/agent/0196a99287397245a89958368ea2e32aa1bf" target="_blank" class="nav-cta">Get In Touch</a>
+            </div>
+        </nav>
+
+        <section class="hero-section">
+            <div class="glow-orb" style="width:600px;height:600px;background:var(--accent);top:-200px;right:-100px;"></div>
+            <div class="glow-orb" style="width:400px;height:400px;background:#333;bottom:-100px;left:-100px;"></div>
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        Teen-Led Tech Education Hub
+                    </div>
+                    <h1 class="hero-title font-avathor">
+                        <span class="line"><span class="line-inner">CODE.</span></span>
+                        <span class="line"><span class="line-inner">CREATE.</span></span>
+                        <span class="line"><span class="line-inner text-accent">INNOVATE.</span></span>
+                    </h1>
+                    <p class="hero-desc">We empower the next generation to master AI, coding, and design through hands-on, project-based learning that gets real results.</p>
+                    <div class="hero-buttons">
+                        <a href="https://mastercotutorials.my.canva.site" target="_blank" class="btn-primary">Start Learning <span>&#8599;</span></a>
+                        <a href="https://www.jotform.com/agent/0196a99287397245a89958368ea2e32aa1bf" target="_blank" class="btn-ghost">Ask Our AI Assistant <span>&#8599;</span></a>
+                    </div>
+                    <div class="hero-stats">
+                        <div>
+                            <div class="hero-stat-num font-avathor">500+</div>
+                            <div class="hero-stat-label">Students Empowered</div>
+                        </div>
+                        <div>
+                            <div class="hero-stat-num font-avathor">90%</div>
+                            <div class="hero-stat-label">Project Completion</div>
+                        </div>
+                        <div>
+                            <div class="hero-stat-num font-avathor">100+</div>
+                            <div class="hero-stat-label">Projects Launched</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-video-wrap" id="heroVideo">
+                        <video autoplay loop muted playsinline>
+                            <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260416_101255_3099d3e4-d0cf-4e59-9666-97fbf521ac71.mp4" type="video/mp4">
+                        </video>
+                        <div class="hero-video-overlay"></div>
+                        <div class="hero-video-badge">
+                            <span class="dot"></span>
+                            Live Preview
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-pad" id="features">
+            <div class="glow-orb" style="width:500px;height:500px;background:var(--accent);top:0;right:-200px;"></div>
+            <div class="section-inner">
+                <div class="reveal" style="text-align:center;max-width:700px;margin:0 auto 0;">
+                    <div class="section-tag">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        The MCO Advantage
+                    </div>
+                    <h2 class="section-title font-avathor">BUILT DIFFERENT.<br><span class="text-accent">DESIGNED FOR RESULTS.</span></h2>
+                    <p class="section-desc" style="margin:0 auto;">We don't just teach syntax; we build creators. Here is why hundreds of students choose MCO Tutorials to accelerate their tech journey.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card reveal">
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h3 class="feature-title font-avathor">CINEMATIC QUALITY</h3>
+                        <p class="feature-text">Crystal-clear, high-resolution tutorials with professional audio, ensuring you never miss a single line of code or design detail.</p>
+                    </div>
+                    <div class="feature-card reveal">
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        </div>
+                        <h3 class="feature-title font-avathor">PROJECT-BASED</h3>
+                        <p class="feature-text">Don't just watch, build. Every module culminates in a real-world, portfolio-ready project that proves your new skills.</p>
+                    </div>
+                    <div class="feature-card reveal">
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 class="feature-title font-avathor">AI-DRIVEN WORKFLOWS</h3>
+                        <p class="feature-text">Stay ahead of the curve. We integrate modern AI assistants and automation tools directly into our coding lessons.</p>
+                    </div>
+                    <div class="feature-card reveal">
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <h3 class="feature-title font-avathor">ACTIVE COMMUNITY</h3>
+                        <p class="feature-text">Get unstuck fast. Join our exclusive Discord for direct mentor support, code reviews, and peer collaboration.</p>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-top:3rem;" class="reveal">
+                    <a href="https://mastercotutorials.my.canva.site" target="_blank" class="btn-primary">Explore All Features <span>&#8594;</span></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-pad" id="showcase">
+            <div class="glow-orb" style="width:600px;height:600px;background:var(--accent);top:20%;left:-200px;"></div>
+            <div class="section-inner">
+                <div class="reveal" style="margin-bottom:1rem;">
+                    <div style="width:60px;height:3px;background:var(--accent);margin-bottom:2rem;"></div>
+                    <h2 class="section-title font-avathor">SEE THE <span class="text-accent" style="font-style:italic;">QUALITY</span>.<br>EXPERIENCE THE <span class="text-accent" style="font-style:italic;">IMPACT</span>.</h2>
+                    <p class="section-desc">Don't just take our word for it. Dive into our latest tutorials and see how we break down complex topics into actionable, easy-to-follow lessons.</p>
+                </div>
+                <div class="showcase-grid">
+                    <div class="showcase-main reveal">
+                        <div class="showcase-thumb" onclick="loadVideo(this, '3vekgImzY7E')">
+                            <img src="https://img.youtube.com/vi/3vekgImzY7E/maxresdefault.jpg" alt="Featured Video">
+                            <div class="showcase-tag">Featured Course</div>
+                            <div class="showcase-play">
+                                <svg width="28" height="28" fill="white" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                            </div>
+                        </div>
+                        <div class="showcase-info">
+                            <h3 class="font-avathor">Mastering Modern Web Development</h3>
+                            <p>Learn how to build fully responsive, dynamic web applications from scratch. This comprehensive tutorial covers everything you need to know.</p>
+                            <div class="showcase-meta">
+                                <span>12.5K Views</span>
+                                <span>Recently Added</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="showcase-side">
+                        <div class="showcase-card reveal">
+                            <div class="showcase-card-thumb" onclick="loadVideo(this, 'ufpVWGTKXCE')">
+                                <img src="https://img.youtube.com/vi/ufpVWGTKXCE/maxresdefault.jpg" alt="Video">
+                                <div class="showcase-card-tag tag-dark">Web Dev</div>
+                            </div>
+                            <div class="showcase-card-info">
+                                <h4>Advanced Frontend Techniques</h4>
+                                <div class="showcase-card-meta">22 MINS &bull; 8.2K Views</div>
+                            </div>
+                        </div>
+                        <div class="showcase-card reveal">
+                            <div class="showcase-card-thumb" onclick="loadVideo(this, '7xKcKEEJ7-o', 59)">
+                                <img src="https://img.youtube.com/vi/7xKcKEEJ7-o/maxresdefault.jpg" alt="Video">
+                                <div class="showcase-card-tag tag-accent">UI/UX Design</div>
+                            </div>
+                            <div class="showcase-card-info">
+                                <h4>Design to Code: The Ultimate Workflow</h4>
+                                <div class="showcase-card-meta">35 MINS &bull; 15K Views</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="story-section" id="story">
+            <div class="section-inner">
+                <div class="reveal" style="text-align:center;margin-bottom:2rem;">
+                    <div class="section-tag" style="margin:0 auto 1.5rem;">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                        Our Story
+                    </div>
+                    <h2 class="section-title font-avathor">THE BLUEPRINT OF <span class="text-accent">MCO.</span></h2>
+                </div>
+                <div class="story-grid">
+                    <div class="story-content reveal-left">
+                        <p class="section-desc" style="max-width:100%;margin-bottom:1.5rem;">Every great journey begins with a single spark. For MasterCo Tutorials (MCO), that spark was a simple yet powerful mission: To centralize, simplify, and elevate the way people learn online.</p>
+                        <p class="section-desc" style="max-width:100%;margin-bottom:1.5rem;">In a digital world overflowing with scattered information, finding structured, high-quality guidance can be overwhelming. Whether it's diving into complex development scripts, mastering graphic design, or understanding digital aesthetics, learners often get lost in the noise.</p>
+                        <p class="section-desc" style="max-width:100%;margin-bottom:1.5rem;">MasterCo Tutorials was born to bridge this gap. We set out to create a unified educational hub where tech, creativity, and logic meet seamlessly.</p>
+                        <div class="story-quote">"We don't just share knowledge; we build creators, developers, and thinkers."</div>
+                        <p class="section-desc" style="max-width:100%;margin-bottom:1.5rem;">What started as a passionate project to streamline tutorials has now evolved into a thriving community. Through our highly structured video content on YouTube and our interactive, real-time hub on Discord, we ensure that no learner has to walk their path alone.</p>
+                        <p class="section-desc" style="max-width:100%;margin-bottom:2rem;">This website is the next step in our blueprint. We are here to help you master your craft, build your vision, and unlock your true potential—one tutorial at a time.</p>
+                        <a href="https://discord.gg/VqTEr7Nsqk" target="_blank" class="btn-primary">Join the Journey <span>&#8594;</span></a>
+                    </div>
+                    <div class="story-visual reveal-right">
+                        <div class="story-glow"></div>
+                        <img src="brand-title.png" alt="MasterCo Tutorials" class="story-brand-img">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-pad" id="community">
+            <div class="section-inner" style="text-align:center;">
+                <div class="reveal">
+                    <div class="section-tag" style="margin:0 auto 1.5rem;">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/></svg>
+                        Community Hub
+                    </div>
+                    <h2 class="section-title font-avathor">DON'T LEARN <span class="text-accent">ALONE</span>.<br>LEARN <span class="text-accent">TOGETHER</span>.</h2>
+                    <p class="section-desc" style="margin:0 auto;">Join thousands of students, creators, and tech enthusiasts. Get your questions answered, share your projects, and grow with us.</p>
+                </div>
+                <div class="community-grid">
+                    <a href="https://www.youtube.com/@MASTERCOTUTORIALS" target="_blank" class="community-card community-card-light reveal-left">
+                        <div class="community-icon">
+                            <svg width="32" height="32" fill="#E63946" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </div>
+                        <h3 class="font-avathor">YouTube Channel</h3>
+                        <p>Subscribe for weekly tutorials, tech tips, and behind-the-scenes content. Level up your skills with our free, high-quality video lessons.</p>
+                        <div class="community-link">Subscribe Now <span>&#8594;</span></div>
+                    </a>
+                    <a href="https://discord.gg/VqTEr7Nsqk" target="_blank" class="community-card community-card-dark reveal-right">
+                        <div class="community-icon">
+                            <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419z"/></svg>
+                        </div>
+                        <h3 class="font-avathor">Discord Server</h3>
+                        <p>Join our exclusive community. Get direct mentor support, participate in code reviews, and collaborate on projects with peers.</p>
+                        <div class="community-link">Join the Server <span>&#8594;</span></div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-pad" id="team">
+            <div class="section-inner">
+                <div class="reveal" style="text-align:center;margin-bottom:1rem;">
+                    <div class="section-tag" style="margin:0 auto 1.5rem;">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                        The Team
+                    </div>
+                    <h2 class="section-title font-avathor">MEET THE <span class="text-accent">VISIONARY</span> MINDS.</h2>
+                    <p class="section-desc" style="margin:0 auto;">The talented individuals driving MCO Tutorials forward, building the future of tech education.</p>
+                </div>
+                <div class="team-carousel-wrap reveal-scale" id="teamCarousel">
+                    <div class="team-bg" id="teamBg" style="background-color:#F4845F;"></div>
+                    <button class="team-nav-btn team-prev" id="teamPrev">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button class="team-nav-btn team-next" id="teamNext">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div class="team-image-side">
+                        <div class="team-image-frame">
+                            <div class="team-image-shape" id="teamShape" style="background-color:#F4845F;"></div>
+                            <img id="teamImage" src="https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/4.4457fbce.png" alt="Team Member">
+                        </div>
+                    </div>
+                    <div class="team-text-side">
+                        <div class="team-role" id="teamRole">Founder</div>
+                        <h3 class="team-name font-stylish" id="teamName">Siddiqul Akbar</h3>
+                        <p class="team-bio" id="teamBio">Driving the vision of MCO Tutorials forward, empowering the next generation of creators and developers with cutting-edge, project-based learning.</p>
+                        <div class="team-dots" id="teamDots"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <img src="mascot.png" alt="MCO Mascot">
+                        <h3 class="font-avathor">MASTERCO<span class="text-accent">TUTORIALS</span></h3>
+                        <p>Empowering the next generation to master AI, coding, and design through hands-on, project-based learning.</p>
+                    </div>
+                    <div class="footer-links-grid">
+                        <div class="footer-col">
+                            <h4>Explore</h4>
+                            <ul>
+                                <li><a href="https://mastercotutorials.my.canva.site" target="_blank">Main Website</a></li>
+                                <li><a href="https://siddikampany.blogspot.com" target="_blank">Personal Blog</a></li>
+                                <li><a href="https://scratch.mit.edu/users/siddiqulakbark" target="_blank">Scratch Projects</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col">
+                            <h4>Community</h4>
+                            <ul>
+                                <li><a href="https://discord.gg/VqTEr7Nsqk" target="_blank">Discord Server</a></li>
+                                <li><a href="https://deviantart.com/mastercotutorials" target="_blank">DeviantArt</a></li>
+                                <li><a href="https://in.pinterest.com/mastercotutorials" target="_blank">Pinterest</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col">
+                            <h4>Business</h4>
+                            <ul>
+                                <li><a href="https://mcobot.blogspot.com" target="_blank">Business Blog</a></li>
+                                <li><a href="https://in.pinterest.com/mastercodingorganisation" target="_blank">Business Pinterest</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Mastercotutorials. All rights reserved.</p>
+                    <p>Built with <span class="text-accent">&hearts;</span> &amp; Driven by Creativity.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+    // LOADING SCREEN
+    const loaderFill = document.getElementById('loaderFill');
+    const loader = document.getElementById('loader');
+    let loadProgress = 0;
+    const loadInterval = setInterval(() => {
+        loadProgress += Math.random() * 30;
+        if (loadProgress >= 100) { loadProgress = 100; clearInterval(loadInterval); setTimeout(() => loader.classList.add('hidden'), 400); }
+        loaderFill.style.width = loadProgress + '%';
+    }, 200);
+
+    // CUSTOM CURSOR
+    const cursorDot = document.getElementById('cursorDot');
+    const cursorRing = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+    document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; cursorDot.style.left = mouseX - 4 + 'px'; cursorDot.style.top = mouseY - 4 + 'px'; });
+    function animateCursor() { ringX += (mouseX - ringX) * 0.12; ringY += (mouseY - ringY) * 0.12; cursorRing.style.left = ringX - 17.5 + 'px'; cursorRing.style.top = ringY - 17.5 + 'px'; requestAnimationFrame(animateCursor); }
+    animateCursor();
+    document.querySelectorAll('a, button, .feature-card, .showcase-card, .showcase-main, .community-card').forEach(el => {
+        el.addEventListener('mouseenter', () => { cursorRing.style.transform = 'scale(1.5)'; cursorRing.style.borderColor = 'rgba(230,57,70,0.8)'; });
+        el.addEventListener('mouseleave', () => { cursorRing.style.transform = 'scale(1)'; cursorRing.style.borderColor = 'rgba(230,57,70,0.5)'; });
+    });
+
+    // THREE.JS 3D SCENE
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const particleCount = 800;
+    const particleGeometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 40;
+        positions[i+1] = (Math.random() - 0.5) * 40;
+        positions[i+2] = (Math.random() - 0.5) * 30 - 5;
+        velocities[i] = (Math.random() - 0.5) * 0.005;
+        velocities[i+1] = (Math.random() - 0.5) * 0.005;
+        velocities[i+2] = (Math.random() - 0.5) * 0.003;
+    }
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMaterial = new THREE.PointsMaterial({ color: 0xE63946, size: 0.04, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    scene.add(particles);
+
+    const shapes = [];
+    const geoTypes = [
+        new THREE.IcosahedronGeometry(1.5, 1),
+        new THREE.OctahedronGeometry(1.2, 0),
+        new THREE.TorusGeometry(1, 0.3, 8, 16),
+        new THREE.TetrahedronGeometry(1, 0),
+        new THREE.TorusKnotGeometry(0.8, 0.25, 64, 8)
+    ];
+    for (let i = 0; i < 5; i++) {
+        const mat = new THREE.MeshBasicMaterial({ color: 0xE63946, wireframe: true, transparent: true, opacity: 0.08 + Math.random() * 0.07 });
+        const mesh = new THREE.Mesh(geoTypes[i], mat);
+        mesh.position.set((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 15, -8 - Math.random() * 10);
+        mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        mesh.userData = { rotSpeed: { x: (Math.random()-0.5)*0.003, y: (Math.random()-0.5)*0.003 }, floatSpeed: 0.0005 + Math.random()*0.001, floatOffset: Math.random()*Math.PI*2 };
+        scene.add(mesh);
+        shapes.push(mesh);
+    }
+
+    const gridHelper = new THREE.GridHelper(40, 40, 0x222222, 0x111111);
+    gridHelper.position.y = -8;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.15;
+    scene.add(gridHelper);
+
+    camera.position.z = 5;
+    let scrollY = 0;
+    let targetMouseX = 0, targetMouseY = 0;
+
+    document.addEventListener('mousemove', e => {
+        targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    function animateScene() {
+        requestAnimationFrame(animateScene);
+        const time = Date.now() * 0.001;
+
+        const pos = particleGeometry.attributes.position.array;
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            pos[i] += velocities[i];
+            pos[i+1] += velocities[i+1];
+            pos[i+2] += velocities[i+2];
+            if (Math.abs(pos[i]) > 20) velocities[i] *= -1;
+            if (Math.abs(pos[i+1]) > 20) velocities[i+1] *= -1;
+            if (Math.abs(pos[i+2]) > 15) velocities[i+2] *= -1;
+        }
+        particleGeometry.attributes.position.needsUpdate = true;
+
+        shapes.forEach(s => {
+            s.rotation.x += s.userData.rotSpeed.x;
+            s.rotation.y += s.userData.rotSpeed.y;
+            s.position.y += Math.sin(time * s.userData.floatSpeed * 100 + s.userData.floatOffset) * 0.003;
+        });
+
+        camera.position.x += (targetMouseX * 0.5 - camera.position.x) * 0.02;
+        camera.position.y += (-targetMouseY * 0.3 - camera.position.y) * 0.02;
+        camera.lookAt(0, 0, -5);
+
+        scrollY = window.scrollY;
+        particles.rotation.y = scrollY * 0.0001;
+        particles.position.y = -scrollY * 0.002;
+
+        renderer.render(scene, camera);
+    }
+    animateScene();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // GSAP ANIMATIONS
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.to('.hero-title .line-inner', {
+        y: 0, duration: 1.2, stagger: 0.12, ease: 'power4.out', delay: 0.8
+    });
+    gsap.from('.hero-badge', { opacity: 0, y: 20, duration: 0.8, delay: 0.5, ease: 'power3.out' });
+    gsap.from('.hero-desc', { opacity: 0, y: 30, duration: 0.8, delay: 1.3, ease: 'power3.out' });
+    gsap.from('.hero-buttons', { opacity: 0, y: 30, duration: 0.8, delay: 1.5, ease: 'power3.out' });
+    gsap.from('.hero-stats > div', { opacity: 0, y: 30, duration: 0.6, stagger: 0.1, delay: 1.7, ease: 'power3.out' });
+    gsap.from('.hero-video-wrap', { opacity: 0, scale: 0.9, rotateY: -10, duration: 1.2, delay: 1, ease: 'power3.out' });
+
+    gsap.utils.toArray('.reveal').forEach(el => {
+        gsap.to(el, {
+            scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
+            opacity: 1, y: 0, duration: 0.8, ease: 'power3.out'
+        });
+    });
+    gsap.utils.toArray('.reveal-left').forEach(el => {
+        gsap.to(el, {
+            scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
+            opacity: 1, x: 0, duration: 0.8, ease: 'power3.out'
+        });
+    });
+    gsap.utils.toArray('.reveal-right').forEach(el => {
+        gsap.to(el, {
+            scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
+            opacity: 1, x: 0, duration: 0.8, ease: 'power3.out'
+        });
+    });
+    gsap.utils.toArray('.reveal-scale').forEach(el => {
+        gsap.to(el, {
+            scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
+            opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out'
+        });
+    });
+
+    gsap.utils.toArray('.feature-card').forEach((card, i) => {
+        gsap.to(card, {
+            scrollTrigger: { trigger: card, start: 'top 88%', toggleActions: 'play none none reverse' },
+            opacity: 1, y: 0, duration: 0.6, delay: i * 0.1, ease: 'back.out(1.5)'
+        });
+    });
+
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            card.style.transform = `translateY(-8px) perspective(600px) rotateX(${-y*8}deg) rotateY(${x*8}deg)`;
+        });
+        card.addEventListener('mouseleave', () => { card.style.transform = 'translateY(0) perspective(600px) rotateX(0) rotateY(0)'; });
+    });
+
+    const heroVideo = document.getElementById('heroVideo');
+    if (heroVideo) {
+        heroVideo.addEventListener('mousemove', e => {
+            const rect = heroVideo.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            heroVideo.style.transform = `perspective(800px) rotateX(${-y*10}deg) rotateY(${x*10}deg)`;
+        });
+        heroVideo.addEventListener('mouseleave', () => { heroVideo.style.transform = 'perspective(800px) rotateX(0) rotateY(0)'; });
+    }
+
+    window.addEventListener('scroll', () => {
+        document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // TEAM CAROUSEL
+    const CHARACTERS = [
+        { name: 'Siddiqul Akbar', role: 'Founder', bio: 'Driving the vision of MCO Tutorials forward, empowering the next generation of creators and developers with cutting-edge, project-based learning.', src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/4.4457fbce.png', bg: '#F4845F' },
+        { name: 'William Nguyen', role: 'Managing Partner', bio: 'Overseeing operations and strategic growth, ensuring every student receives the highest quality learning experience and mentorship.', src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/3.4df853b4.png', bg: '#6BBF7A' },
+        { name: 'Mohammed Ayan', role: 'Senior Staff', bio: 'Crafting innovative curriculum and hands-on projects that challenge students to think critically and build real-world solutions.', src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/1.02464a56.png', bg: '#E882B4' },
+        { name: 'Zainab', role: 'Senior Staff', bio: 'Leading community engagement and student support, fostering an inclusive environment where every voice matters and every learner thrives.', src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/2.b977faab.png', bg: '#6EB5FF' }
+    ];
+    CHARACTERS.forEach(c => { const img = new Image(); img.src = c.src; });
+
+    let teamIdx = 0;
+    const teamBg = document.getElementById('teamBg');
+    const teamShape = document.getElementById('teamShape');
+    const teamImage = document.getElementById('teamImage');
+    const teamRole = document.getElementById('teamRole');
+    const teamName = document.getElementById('teamName');
+    const teamBio = document.getElementById('teamBio');
+    const teamDots = document.getElementById('teamDots');
+
+    CHARACTERS.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'team-dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', () => goToTeamSlide(i));
+        teamDots.appendChild(dot);
+    });
+
+    function updateTeamDots() {
+        teamDots.querySelectorAll('.team-dot').forEach((d, i) => d.classList.toggle('active', i === teamIdx));
+    }
+
+    function goToTeamSlide(idx) {
+        if (idx === teamIdx) return;
+        const tl = gsap.timeline();
+        tl.to([teamImage, teamRole, teamName, teamBio], { y: -20, opacity: 0, duration: 0.2, ease: 'power2.in', stagger: 0.02 })
+          .call(() => {
+              teamIdx = idx;
+              teamImage.src = CHARACTERS[teamIdx].src;
+              teamRole.textContent = CHARACTERS[teamIdx].role;
+              teamName.textContent = CHARACTERS[teamIdx].name;
+              teamBio.textContent = CHARACTERS[teamIdx].bio;
+              teamBg.style.backgroundColor = CHARACTERS[teamIdx].bg;
+              teamShape.style.backgroundColor = CHARACTERS[teamIdx].bg;
+              updateTeamDots();
+          })
+          .fromTo([teamImage, teamRole, teamName, teamBio], { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.04, ease: 'back.out(1.2)' });
+    }
+
+    document.getElementById('teamPrev').addEventListener('click', () => goToTeamSlide(teamIdx === 0 ? CHARACTERS.length - 1 : teamIdx - 1));
+    document.getElementById('teamNext').addEventListener('click', () => goToTeamSlide(teamIdx === CHARACTERS.length - 1 ? 0 : teamIdx + 1));
+
+    let teamAuto = setInterval(() => goToTeamSlide(teamIdx === CHARACTERS.length - 1 ? 0 : teamIdx + 1), 6000);
+    document.getElementById('teamCarousel').addEventListener('mouseenter', () => clearInterval(teamAuto));
+    document.getElementById('teamCarousel').addEventListener('mouseleave', () => { teamAuto = setInterval(() => goToTeamSlide(teamIdx === CHARACTERS.length - 1 ? 0 : teamIdx + 1), 6000); });
+
+    // YOUTUBE VIDEO LOADER
+    function loadVideo(el, videoId, startAt) {
+        if (el.querySelector('iframe')) return;
+        const iframe = document.createElement('iframe');
+        let src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0&modestbranding=1';
+        if (startAt) src += '&start=' + startAt;
+        iframe.src = src;
+        iframe.style.cssText = 'width:100%;height:100%;position:absolute;inset:0;border:0;';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        el.innerHTML = '';
+        el.appendChild(iframe);
+        el.style.cursor = 'default';
+    }
+    </script>
+</body>
+</html>
